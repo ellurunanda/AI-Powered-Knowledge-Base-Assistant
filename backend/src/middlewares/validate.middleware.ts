@@ -3,11 +3,13 @@ import type { ZodTypeAny } from "zod";
 
 export function validate(schema: ZodTypeAny): RequestHandler {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const result = schema.safeParse({
-      body: req.body,
-      params: req.params,
-      query: req.query,
-    });
+    const payload = {
+      body: req.body ?? {},
+      params: req.params ?? {},
+      query: req.query ?? {},
+    };
+
+    const result = schema.safeParse(payload);
 
     if (!result.success) {
       next(result.error);
