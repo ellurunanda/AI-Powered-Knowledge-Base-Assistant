@@ -1,0 +1,53 @@
+import type { Request, Response } from "express";
+import { AppError } from "../../utils/app-error";
+import { asyncHandler } from "../../utils/async-handler";
+import { createDocumentRecord, listDocumentsByOwner } from "./documents.service";
+import { uploadDocumentBodySchema } from "./documents.validation";
+
+export const uploadDocumentController = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError("Unauthorized", 401);
+  }
+
+  if (!req.file) {
+    throw new AppError("File is required. Use field name 'file'", 400);
+  }
+
+  const parsedBody = uploadDocumentBodySchema.safeParse(req.body);
+  if (!parsedBody.success) {
+    throw parsedBody.error;
+  }
+
+  const createInput: {
+    ownerId: string;
+    file: Express.Multer.File;
+    title?: string;
+  } = {
+    ownerId: req.user.id,
+    file: req.file,
+  };
+
+  if (parsedBody.data.title) {
+    createInput.title = parsedBody.data.title;
+  }
+
+  const document = await createDocumentRecord(createInput);
+
+  res.status(201).json({
+    success: true,
+    message: "Document uploaded successfully",
+    data: document,
+  });
+});
+
+export const listDocumentsController = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError("Unauthorized", 401);
+  }
+
+  const documents = await listDocumentsByOwner(req.user.id);
+  res.status(200).json({
+    success: true,
+    data: documents,
+  });
+});
