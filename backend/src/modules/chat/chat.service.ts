@@ -158,13 +158,13 @@ export async function askQuestion(ownerId: string, input: AskQuestionInput): Pro
     answer = response.response.text().trim();
   } catch (error) {
     if (error instanceof Error) {
-      throw new AppError(`Gemini request failed: ${error.message}`, 502);
+      throw new AppError(`Gemini request failed: ${error.message}`, 502, "GEMINI_ERROR");
     }
-    throw new AppError("Gemini request failed", 502);
+    throw new AppError("Gemini request failed", 502, "GEMINI_ERROR");
   }
 
   if (!answer) {
-    throw new AppError("Gemini returned an empty response", 502);
+    throw new AppError("Gemini returned an empty response", 502, "GEMINI_EMPTY_RESPONSE");
   }
 
   const inputTokensEstimate = estimateTokensFromText(prompt);
@@ -188,4 +188,3 @@ export async function askQuestion(ownerId: string, input: AskQuestionInput): Pro
     sourceChunkIds: chunks.map((chunk) => chunk._id.toString()),
   };
 }
-

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useToast } from "../app/providers/toast-provider";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
 import { LoadingState } from "../components/common/loading-state";
@@ -8,6 +9,7 @@ import { httpClient } from "../lib/api/http-client";
 import type { DocumentItem } from "../types/api";
 
 export function UploadPage() {
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -37,7 +39,9 @@ export function UploadPage() {
   const handleUpload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!file) {
-      setUploadError("Please choose a file before uploading.");
+      const message = "Please choose a file before uploading.";
+      setUploadError(message);
+      showToast(message, "error");
       return;
     }
 
@@ -57,11 +61,14 @@ export function UploadPage() {
         },
       });
       setUploadMessage("Upload successful.");
+      showToast("Document uploaded successfully", "success");
       setTitle("");
       setFile(null);
       await loadDocuments();
     } catch (error) {
-      setUploadError(getApiErrorMessage(error));
+      const message = getApiErrorMessage(error);
+      setUploadError(message);
+      showToast(message, "error");
     } finally {
       setIsUploading(false);
     }

@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 import { MulterError } from "multer";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { ZodError } from "zod";
 import { AppError } from "../utils/app-error";
 
@@ -23,6 +24,7 @@ export function errorMiddleware(
     res.status(400).json({
       success: false,
       message: "Validation failed",
+      code: "VALIDATION_ERROR",
       details,
     });
     return;
@@ -37,7 +39,21 @@ export function errorMiddleware(
     res.status(400).json({
       success: false,
       message: "Database validation failed",
+      code: "MONGO_VALIDATION_ERROR",
       details,
+    });
+    return;
+  }
+
+  if (error instanceof mongoose.Error.CastError) {
+    res.status(400).json({
+      success: false,
+      message: `Invalid value for ${error.path}`,
+      code: "MONGO_CAST_ERROR",
+      details: {
+        path: error.path,
+        value: error.value,
+      },
     });
     return;
   }
@@ -47,6 +63,7 @@ export function errorMiddleware(
       res.status(400).json({
         success: false,
         message: "File is too large",
+        code: "FILE_TOO_LARGE",
       });
       return;
     }
@@ -54,6 +71,25 @@ export function errorMiddleware(
     res.status(400).json({
       success: false,
       message: error.message,
+      code: "FILE_UPLOAD_ERROR",
+    });
+    return;
+  }
+
+  if (error instanceof TokenExpiredError) {
+    res.status(401).json({
+      success: false,
+      message: "Authentication token has expired",
+      code: "JWT_EXPIRED",
+    });
+    return;
+  }
+
+  if (error instanceof JsonWebTokenError) {
+    res.status(401).json({
+      success: false,
+      message: "Invalid authentication token",
+      code: "JWT_INVALID",
     });
     return;
   }
@@ -68,6 +104,7 @@ export function errorMiddleware(
     res.status(409).json({
       success: false,
       message: "Duplicate resource",
+      code: "MONGO_DUPLICATE_KEY",
       details: error.keyValue,
     });
     return;
@@ -77,6 +114,8 @@ export function errorMiddleware(
     res.status(error.statusCode).json({
       success: false,
       message: error.message,
+      code: error.code,
+      details: error.details,
     });
     return;
   }
@@ -85,6 +124,7 @@ export function errorMiddleware(
     res.status(500).json({
       success: false,
       message: error.message,
+      code: "UNHANDLED_ERROR",
     });
     return;
   }
@@ -92,5 +132,6 @@ export function errorMiddleware(
   res.status(500).json({
     success: false,
     message: "Unexpected server error",
+    code: "UNKNOWN_ERROR",
   });
 }

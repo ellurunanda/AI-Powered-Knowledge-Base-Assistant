@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "../app/providers/toast-provider";
 import { ErrorState } from "../components/common/error-state";
 import { PageShell } from "../components/common/page-shell";
 import { useAuth } from "../features/auth/use-auth";
@@ -8,6 +9,7 @@ import { getApiErrorMessage } from "../lib/api/error";
 export function SignupPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +22,12 @@ export function SignupPage() {
     setError("");
     try {
       await register(name, email, password);
+      showToast("Account created successfully", "success");
       navigate("/dashboard", { replace: true });
     } catch (submitError) {
-      setError(getApiErrorMessage(submitError));
+      const message = getApiErrorMessage(submitError);
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }

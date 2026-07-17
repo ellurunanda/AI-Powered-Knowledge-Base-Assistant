@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useToast } from "../../app/providers/toast-provider";
 import { getApiErrorMessage } from "../../lib/api/error";
 import { useAuth } from "../../features/auth/use-auth";
 
@@ -12,12 +13,14 @@ const navItems = [
 
 export function MainLayout() {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
 
   const handleLogout = async () => {
     try {
       await logout();
+      showToast("Logged out successfully", "success");
     } catch (error) {
-      window.alert(getApiErrorMessage(error));
+      showToast(getApiErrorMessage(error), "error");
     }
   };
 

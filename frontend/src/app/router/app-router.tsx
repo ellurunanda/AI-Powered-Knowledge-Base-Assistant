@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainLayout } from "../../components/layout/main-layout";
+import { ToastProvider } from "../providers/toast-provider";
 import { AuthProvider } from "../../features/auth/auth-context";
 import { ChatPage } from "../../pages/chat-page";
 import { DashboardPage } from "../../pages/dashboard-page";
@@ -12,9 +13,10 @@ import { ProtectedRoute, PublicOnlyRoute } from "./route-guards";
 
 export function AppRouter() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ToastProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
           <Route
             path="/login"
             element={
@@ -45,8 +47,9 @@ export function AppRouter() {
             <Route path="/search" element={<SearchPage />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

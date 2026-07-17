@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useToast } from "../app/providers/toast-provider";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
 import { LoadingState } from "../components/common/loading-state";
@@ -8,6 +9,7 @@ import { httpClient } from "../lib/api/http-client";
 import type { DocumentItem } from "../types/api";
 
 export function ChatPage() {
+  const { showToast } = useToast();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const [documentsError, setDocumentsError] = useState("");
@@ -41,7 +43,9 @@ export function ChatPage() {
   const handleAsk = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedDocumentId) {
-      setAskError("Please select a document.");
+      const message = "Please select a document.";
+      setAskError(message);
+      showToast(message, "error");
       return;
     }
 
@@ -59,8 +63,11 @@ export function ChatPage() {
       });
       setAnswer(response.data.data.answer);
       setSourceChunkIds(response.data.data.sourceChunkIds);
+      showToast("Answer generated", "success");
     } catch (error) {
-      setAskError(getApiErrorMessage(error));
+      const message = getApiErrorMessage(error);
+      setAskError(message);
+      showToast(message, "error");
     } finally {
       setIsAsking(false);
     }
