@@ -26,7 +26,10 @@ export function ChatPage() {
     try {
       const response = await httpClient.get<{ success: boolean; data: DocumentItem[] }>("/documents");
       setDocuments(response.data.data);
-      if (response.data.data.length > 0) {
+      if (
+        response.data.data.length > 0 &&
+        (!selectedDocumentId || !response.data.data.some((item) => item.id === selectedDocumentId))
+      ) {
         setSelectedDocumentId(response.data.data[0].id);
       }
     } catch (error) {
@@ -34,7 +37,7 @@ export function ChatPage() {
     } finally {
       setIsLoadingDocuments(false);
     }
-  }, []);
+  }, [selectedDocumentId]);
 
   useEffect(() => {
     void loadDocuments();
@@ -44,6 +47,12 @@ export function ChatPage() {
     event.preventDefault();
     if (!selectedDocumentId) {
       const message = "Please select a document.";
+      setAskError(message);
+      showToast(message, "error");
+      return;
+    }
+    if (!question.trim()) {
+      const message = "Please enter a question.";
       setAskError(message);
       showToast(message, "error");
       return;
@@ -58,7 +67,7 @@ export function ChatPage() {
         success: boolean;
         data: { answer: string; documentId: string; sourceChunkIds: string[] };
       }>("/chat/ask", {
-        question,
+        question: question.trim(),
         documentId: selectedDocumentId,
       });
       setAnswer(response.data.data.answer);

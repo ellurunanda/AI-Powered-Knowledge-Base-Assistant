@@ -21,7 +21,7 @@ export function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       showToast("Login successful", "success");
       navigate("/dashboard", { replace: true });
     } catch (submitError) {

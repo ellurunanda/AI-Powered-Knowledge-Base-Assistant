@@ -47,6 +47,8 @@ export function SearchPage() {
       setDocuments(response.data.data.documents);
       setConversations(response.data.data.conversations);
     } catch (loadError) {
+      setDocuments([]);
+      setConversations([]);
       setError(getApiErrorMessage(loadError));
     } finally {
       setIsLoading(false);

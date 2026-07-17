@@ -21,7 +21,7 @@ export function SignupPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      await register(name, email, password);
+      await register(name.trim(), email.trim(), password);
       showToast("Account created successfully", "success");
       navigate("/dashboard", { replace: true });
     } catch (submitError) {
