@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
 import { authRouter } from "./modules/auth/auth.routes";
 import { chatRouter } from "./modules/chat/chat.routes";
+import { conversationsRouter } from "./modules/conversations/conversations.routes";
 import { documentsRouter } from "./modules/documents/documents.routes";
 
 export const app = express();
@@ -32,6 +33,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/documents", documentsRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/conversations", conversationsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
