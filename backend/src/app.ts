@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
+import { analyticsRouter } from "./modules/analytics/analytics.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { chatRouter } from "./modules/chat/chat.routes";
 import { conversationsRouter } from "./modules/conversations/conversations.routes";
@@ -34,6 +35,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/documents", documentsRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/conversations", conversationsRouter);
+app.use("/api/analytics", analyticsRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
