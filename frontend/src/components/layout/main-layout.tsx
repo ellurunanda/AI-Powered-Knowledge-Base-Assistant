@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { getApiErrorMessage } from "../../lib/api/error";
+import { useAuth } from "../../features/auth/use-auth";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard" },
@@ -9,6 +11,16 @@ const navItems = [
 ];
 
 export function MainLayout() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      window.alert(getApiErrorMessage(error));
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
@@ -28,6 +40,14 @@ export function MainLayout() {
                 {item.label}
               </NavLink>
             ))}
+            <span className="ml-2 text-sm text-slate-600">{user?.name}</span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Logout
+            </button>
           </nav>
         </div>
       </header>
