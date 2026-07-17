@@ -1,0 +1,10 @@
+import { createContext } from "react";
+
+type ToastVariant = "success" | "error" | "info";
+
+export interface ToastContextValue {
+  showToast: (message: string, variant?: ToastVariant) => void;
+}
+
+export const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+

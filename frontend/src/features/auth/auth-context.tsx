@@ -1,17 +1,7 @@
-import { createContext, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from "react";
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 import { httpClient } from "../../lib/api/http-client";
 import type { User } from "../../types/api";
-
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-}
-
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext, type AuthContextValue } from "./auth-context-store";
 let bootstrappedUser: User | null | undefined;
 
 async function loadProfileFromApi(): Promise<User | null> {

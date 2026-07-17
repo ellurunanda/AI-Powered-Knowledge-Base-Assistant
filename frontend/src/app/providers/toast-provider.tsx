@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from "react";
+import { useCallback, useMemo, useState, type PropsWithChildren } from "react";
+import { ToastContext, type ToastContextValue } from "./toast-context";
 
 type ToastVariant = "success" | "error" | "info";
 
@@ -7,12 +8,6 @@ interface ToastItem {
   message: string;
   variant: ToastVariant;
 }
-
-interface ToastContextValue {
-  showToast: (message: string, variant?: ToastVariant) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 export function ToastProvider({ children }: PropsWithChildren) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -55,12 +50,3 @@ export function ToastProvider({ children }: PropsWithChildren) {
     </ToastContext.Provider>
   );
 }
-
-export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error("useToast must be used within ToastProvider");
-  }
-  return context;
-}
-

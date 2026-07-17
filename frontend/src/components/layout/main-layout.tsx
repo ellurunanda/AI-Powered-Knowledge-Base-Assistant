@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { useToast } from "../../app/providers/toast-provider";
+import { useToast } from "../../app/providers/use-toast";
 import { getApiErrorMessage } from "../../lib/api/error";
 import { useAuth } from "../../features/auth/use-auth";
 

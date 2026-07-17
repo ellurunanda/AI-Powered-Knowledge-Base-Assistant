@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { useToast } from "../app/providers/toast-provider";
+import { useToast } from "../app/providers/use-toast";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
 import { LoadingState } from "../components/common/loading-state";

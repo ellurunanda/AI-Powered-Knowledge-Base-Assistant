@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "../app/providers/toast-provider";
+import { useToast } from "../app/providers/use-toast";
 import { ErrorState } from "../components/common/error-state";
 import { PageShell } from "../components/common/page-shell";
 import { useAuth } from "../features/auth/use-auth";
