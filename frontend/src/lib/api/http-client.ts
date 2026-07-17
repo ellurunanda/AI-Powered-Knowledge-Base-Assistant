@@ -5,4 +5,3 @@ export const httpClient = axios.create({
   withCredentials: true,
   timeout: 10000,
 });
-

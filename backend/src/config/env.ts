@@ -17,7 +17,7 @@ const envSchema = z.object({
   CHUNK_SIZE_CHARS: z.coerce.number().int().positive().default(1200),
   CHUNK_OVERLAP_CHARS: z.coerce.number().int().min(0).default(200),
   MAX_CONTEXT_CHUNKS: z.coerce.number().int().positive().default(6),
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  CORS_ORIGIN: z.string().default("http://localhost:3000"),
 });
 
 const parsed = envSchema.safeParse(process.env);

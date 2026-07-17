@@ -50,3 +50,20 @@ export interface DashboardAnalytics {
   }>;
 }
 
+export interface SearchDocumentItem {
+  id: string;
+  title?: string;
+  originalFilename: string;
+  status: "uploaded" | "processing" | "ready" | "failed";
+  uploadDate: string;
+  mimeType: string;
+  sizeInBytes: number;
+}
+
+export interface SearchConversationItem {
+  id: string;
+  documentId?: string;
+  question: string;
+  answer: string;
+  createdAt: string;
+}

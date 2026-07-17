@@ -10,6 +10,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { chatRouter } from "./modules/chat/chat.routes";
 import { conversationsRouter } from "./modules/conversations/conversations.routes";
 import { documentsRouter } from "./modules/documents/documents.routes";
+import { searchRouter } from "./modules/search/search.routes";
 
 export const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/documents", documentsRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/conversations", conversationsRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/search", searchRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
