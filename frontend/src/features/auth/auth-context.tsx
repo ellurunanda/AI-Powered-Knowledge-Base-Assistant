@@ -12,37 +12,45 @@ interface AuthContextValue {
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+let bootstrappedUser: User | null | undefined;
+
+async function loadProfileFromApi(): Promise<User | null> {
+  try {
+    const response = await httpClient.get<{ success: boolean; data: User }>("/auth/me");
+    return response.data.data;
+  } catch {
+    return null;
+  }
+}
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshProfile = useCallback(async () => {
-    try {
-      const response = await httpClient.get<{ success: boolean; data: User }>("/auth/me");
-      setUser(response.data.data);
-    } catch {
-      setUser(null);
-    }
+    const nextUser = await loadProfileFromApi();
+    bootstrappedUser = nextUser;
+    setUser(nextUser);
   }, []);
 
   useEffect(() => {
     let isMounted = true;
     const init = async () => {
       setIsLoading(true);
-      try {
-        const response = await httpClient.get<{ success: boolean; data: User }>("/auth/me");
+
+      if (bootstrappedUser !== undefined) {
         if (isMounted) {
-          setUser(response.data.data);
-        }
-      } catch {
-        if (isMounted) {
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
+          setUser(bootstrappedUser);
           setIsLoading(false);
         }
+        return;
+      }
+
+      const nextUser = await loadProfileFromApi();
+      bootstrappedUser = nextUser;
+      if (isMounted) {
+        setUser(nextUser);
+        setIsLoading(false);
       }
     };
 
@@ -57,7 +65,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       email,
       password,
     });
-    setUser(response.data.data.user);
+    const nextUser = response.data.data.user;
+    bootstrappedUser = nextUser;
+    setUser(nextUser);
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
@@ -66,11 +76,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       email,
       password,
     });
-    setUser(response.data.data.user);
+    const nextUser = response.data.data.user;
+    bootstrappedUser = nextUser;
+    setUser(nextUser);
   }, []);
 
   const logout = useCallback(async () => {
     await httpClient.post("/auth/logout");
+    bootstrappedUser = null;
     setUser(null);
   }, []);
 
@@ -88,4 +101,3 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
