@@ -1,28 +1,17 @@
 import type { Request, Response } from "express";
-import { AppError } from "../../utils/app-error";
 import { asyncHandler } from "../../utils/async-handler";
+import { requireUser } from "../../utils/request-user";
+import { sendSuccess } from "../../utils/success-response";
 import { getDashboardAnalytics } from "./analytics.service";
-import { getDashboardAnalyticsSchema } from "./analytics.validation";
+import type { DashboardAnalyticsQuery } from "./analytics.validation";
 
 export const getDashboardAnalyticsController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new AppError("Unauthorized", 401);
-  }
+  const user = requireUser(req);
+  const query = req.query as unknown as DashboardAnalyticsQuery;
 
-  const parsed = getDashboardAnalyticsSchema.safeParse({
-    body: {},
-    params: {},
-    query: req.query,
-  });
-
-  if (!parsed.success) {
-    throw parsed.error;
-  }
-
-  const result = await getDashboardAnalytics(req.user.id, parsed.data.query);
-  res.status(200).json({
-    success: true,
+  const result = await getDashboardAnalytics(user.id, query);
+  sendSuccess({
+    res,
     data: result,
   });
 });
-

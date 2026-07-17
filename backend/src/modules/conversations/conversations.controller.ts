@@ -1,54 +1,35 @@
 import type { Request, Response } from "express";
-import { AppError } from "../../utils/app-error";
 import { asyncHandler } from "../../utils/async-handler";
+import { requireUser } from "../../utils/request-user";
+import { sendSuccess } from "../../utils/success-response";
 import { getConversationById, listConversationsByOwner } from "./conversations.service";
 import {
-  getConversationByIdSchema,
-  listConversationsSchema,
+  type GetConversationByIdParams,
+  type ListConversationsQuery,
 } from "./conversations.validation";
 
 export const listConversationsController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new AppError("Unauthorized", 401);
-  }
+  const user = requireUser(req);
+  const query = req.query as unknown as ListConversationsQuery;
 
-  const parsed = listConversationsSchema.safeParse({
-    body: {},
-    params: {},
-    query: req.query,
-  });
-
-  if (!parsed.success) {
-    throw parsed.error;
-  }
-
-  const result = await listConversationsByOwner(req.user.id, parsed.data.query);
-  res.status(200).json({
-    success: true,
+  const result = await listConversationsByOwner(user.id, query);
+  sendSuccess({
+    res,
     data: result.items,
-    pagination: result.pagination,
+    extra: {
+      pagination: result.pagination,
+    },
   });
 });
 
 export const getConversationController = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.user) {
-      throw new AppError("Unauthorized", 401);
-    }
+    const user = requireUser(req);
+    const params = req.params as unknown as GetConversationByIdParams;
 
-    const parsed = getConversationByIdSchema.safeParse({
-      body: {},
-      params: req.params,
-      query: {},
-    });
-
-    if (!parsed.success) {
-      throw parsed.error;
-    }
-
-    const result = await getConversationById(req.user.id, parsed.data.params.conversationId);
-    res.status(200).json({
-      success: true,
+    const result = await getConversationById(user.id, params.conversationId);
+    sendSuccess({
+      res,
       data: result,
     });
   },

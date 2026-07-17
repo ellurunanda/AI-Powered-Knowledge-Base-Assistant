@@ -1,13 +1,13 @@
 import type { Request, Response } from "express";
-import { AppError } from "../../utils/app-error";
 import { asyncHandler } from "../../utils/async-handler";
+import { AppError } from "../../utils/app-error";
+import { requireUser } from "../../utils/request-user";
+import { sendSuccess } from "../../utils/success-response";
 import { createDocumentRecord, listDocumentsByOwner } from "./documents.service";
 import { uploadDocumentBodySchema } from "./documents.validation";
 
 export const uploadDocumentController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new AppError("Unauthorized", 401);
-  }
+  const user = requireUser(req);
 
   if (!req.file) {
     throw new AppError("File is required. Use field name 'file'", 400);
@@ -23,7 +23,7 @@ export const uploadDocumentController = asyncHandler(async (req: Request, res: R
     file: Express.Multer.File;
     title?: string;
   } = {
-    ownerId: req.user.id,
+    ownerId: user.id,
     file: req.file,
   };
 
@@ -33,21 +33,19 @@ export const uploadDocumentController = asyncHandler(async (req: Request, res: R
 
   const document = await createDocumentRecord(createInput);
 
-  res.status(201).json({
-    success: true,
+  sendSuccess({
+    res,
+    statusCode: 201,
     message: "Document uploaded successfully",
     data: document,
   });
 });
 
 export const listDocumentsController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new AppError("Unauthorized", 401);
-  }
-
-  const documents = await listDocumentsByOwner(req.user.id);
-  res.status(200).json({
-    success: true,
+  const user = requireUser(req);
+  const documents = await listDocumentsByOwner(user.id);
+  sendSuccess({
+    res,
     data: documents,
   });
 });

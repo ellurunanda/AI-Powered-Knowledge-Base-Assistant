@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { env } from "../../config/env";
-import { AppError } from "../../utils/app-error";
 import { asyncHandler } from "../../utils/async-handler";
+import { requireUser } from "../../utils/request-user";
+import { sendSuccess } from "../../utils/success-response";
 import { getProfile, loginUser, registerUser } from "./auth.service";
 import type { LoginInput, RegisterInput } from "./auth.validation";
 
@@ -22,8 +23,9 @@ export const registerController = asyncHandler(
     const result = await registerUser(payload);
 
     setAuthCookie(res, result.token);
-    res.status(201).json({
-      success: true,
+    sendSuccess({
+      res,
+      statusCode: 201,
       message: "Registered successfully",
       data: result,
     });
@@ -36,8 +38,8 @@ export const loginController = asyncHandler(
     const result = await loginUser(payload);
 
     setAuthCookie(res, result.token);
-    res.status(200).json({
-      success: true,
+    sendSuccess({
+      res,
       message: "Logged in successfully",
       data: result,
     });
@@ -45,13 +47,10 @@ export const loginController = asyncHandler(
 );
 
 export const meController = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user) {
-    throw new AppError("Unauthorized", 401);
-  }
-
-  const profile = await getProfile(req.user.id);
-  res.status(200).json({
-    success: true,
+  const user = requireUser(req);
+  const profile = await getProfile(user.id);
+  sendSuccess({
+    res,
     data: profile,
   });
 });
@@ -63,8 +62,8 @@ export const logoutController = asyncHandler(async (_req: Request, res: Response
     secure: env.NODE_ENV === "production",
   });
 
-  res.status(200).json({
-    success: true,
+  sendSuccess({
+    res,
     message: "Logged out successfully",
   });
 });
