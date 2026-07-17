@@ -57,41 +57,26 @@ async function ensureChunksForDocument(documentId: Types.ObjectId, ownerId: Type
 }
 
 async function findRelevantChunks(documentId: Types.ObjectId, ownerId: Types.ObjectId, question: string) {
-  const topChunks = await DocumentChunkModel.aggregate<{
-    _id: Types.ObjectId;
-    content: string;
-    chunkIndex: number;
-  }>([
+  const topChunks = await DocumentChunkModel.find(
     {
-      $match: {
-        documentId,
-        ownerId,
-      },
+      documentId,
+      ownerId,
+      $text: { $search: question },
     },
     {
-      $match: {
-        $text: { $search: question },
-      },
+      _id: 1,
+      content: 1,
+      chunkIndex: 1,
+      score: { $meta: "textScore" },
     },
-    {
-      $addFields: {
-        score: { $meta: "textScore" },
-      },
-    },
-    {
-      $sort: { score: -1 },
-    },
-    {
-      $limit: env.MAX_CONTEXT_CHUNKS,
-    },
-    {
-      $project: {
-        _id: 1,
-        content: 1,
-        chunkIndex: 1,
-      },
-    },
-  ]);
+  )
+    .sort({ score: { $meta: "textScore" } })
+    .limit(env.MAX_CONTEXT_CHUNKS)
+    .lean<{
+      _id: Types.ObjectId;
+      content: string;
+      chunkIndex: number;
+    }[]>();
 
   if (topChunks.length > 0) {
     return topChunks;
