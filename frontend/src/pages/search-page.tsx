@@ -7,6 +7,15 @@ import { getApiErrorMessage } from "../lib/api/error";
 import { httpClient } from "../lib/api/http-client";
 import type { SearchConversationItem, SearchDocumentItem } from "../types/api";
 
+function getAnswerPreview(answer: string): string {
+  const normalized = answer.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 160) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, 157)}...`;
+}
+
 export function SearchPage() {
   const [query, setQuery] = useState("");
   const [documents, setDocuments] = useState<SearchDocumentItem[]>([]);
@@ -116,7 +125,7 @@ export function SearchPage() {
                 {conversations.map((item) => (
                   <li key={item.id} className="rounded-md border border-slate-200 p-3 text-sm">
                     <p className="font-medium text-slate-900">Q: {item.question}</p>
-                    <p className="line-clamp-2 text-slate-700">A: {item.answer}</p>
+                    <p className="text-slate-700">A: {getAnswerPreview(item.answer)}</p>
                   </li>
                 ))}
               </ul>
