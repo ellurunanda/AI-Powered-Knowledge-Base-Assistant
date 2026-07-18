@@ -21,6 +21,7 @@ export function DashboardPage() {
       );
       setAnalytics(response.data.data);
     } catch (loadError) {
+      setAnalytics(null);
       setError(getApiErrorMessage(loadError));
     } finally {
       setIsLoading(false);
@@ -70,8 +71,7 @@ export function DashboardPage() {
               <li key={upload.id} className="rounded-md border border-slate-200 p-3 text-sm">
                 <p className="font-medium text-slate-900">{upload.title || upload.originalFilename}</p>
                 <p className="text-xs text-slate-500">
-                  {new Date(upload.uploadDate).toLocaleString()} • {upload.status} •{" "}
-                  {Math.ceil(upload.sizeInBytes / 1024)} KB
+                  {new Date(upload.uploadDate).toLocaleString()} • {upload.status} • {Math.ceil(upload.sizeInBytes / 1024)} KB
                 </p>
               </li>
             ))}

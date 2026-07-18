@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useToast } from "../app/providers/use-toast";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
@@ -10,6 +10,7 @@ import type { DocumentItem } from "../types/api";
 
 export function UploadPage() {
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -26,6 +27,7 @@ export function UploadPage() {
       const response = await httpClient.get<{ success: boolean; data: DocumentItem[] }>("/documents");
       setDocuments(response.data.data);
     } catch (error) {
+      setDocuments([]);
       setDocumentsError(getApiErrorMessage(error));
     } finally {
       setIsLoadingDocuments(false);
@@ -64,6 +66,9 @@ export function UploadPage() {
       showToast("Document uploaded successfully", "success");
       setTitle("");
       setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       await loadDocuments();
     } catch (error) {
       const message = getApiErrorMessage(error);
@@ -94,6 +99,7 @@ export function UploadPage() {
             File
           </label>
           <input
+            ref={fileInputRef}
             id="file"
             type="file"
             accept=".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf"

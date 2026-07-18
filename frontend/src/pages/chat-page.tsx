@@ -25,14 +25,21 @@ export function ChatPage() {
     setDocumentsError("");
     try {
       const response = await httpClient.get<{ success: boolean; data: DocumentItem[] }>("/documents");
-      setDocuments(response.data.data);
-      if (
-        response.data.data.length > 0 &&
-        (!selectedDocumentId || !response.data.data.some((item) => item.id === selectedDocumentId))
-      ) {
-        setSelectedDocumentId(response.data.data[0].id);
+      const nextDocuments = response.data.data;
+      setDocuments(nextDocuments);
+      if (nextDocuments.length === 0) {
+        setSelectedDocumentId("");
+        setAnswer("");
+        setSourceChunkIds([]);
+        return;
+      }
+
+      if (!selectedDocumentId || !nextDocuments.some((item) => item.id === selectedDocumentId)) {
+        setSelectedDocumentId(nextDocuments[0].id);
       }
     } catch (error) {
+      setDocuments([]);
+      setSelectedDocumentId("");
       setDocumentsError(getApiErrorMessage(error));
     } finally {
       setIsLoadingDocuments(false);
@@ -43,6 +50,12 @@ export function ChatPage() {
     void loadDocuments();
   }, [loadDocuments]);
 
+  useEffect(() => {
+    setAskError("");
+    setAnswer("");
+    setSourceChunkIds([]);
+  }, [selectedDocumentId]);
+
   const handleAsk = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedDocumentId) {
@@ -51,6 +64,7 @@ export function ChatPage() {
       showToast(message, "error");
       return;
     }
+
     if (!question.trim()) {
       const message = "Please enter a question.";
       setAskError(message);
@@ -141,7 +155,11 @@ export function ChatPage() {
         <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-800">Answer</h3>
           <p className="whitespace-pre-wrap text-sm text-slate-700">{answer}</p>
-          <p className="text-xs text-slate-500">Source chunks: {sourceChunkIds.join(", ")}</p>
+          <p className="text-xs text-slate-500">
+            {sourceChunkIds.length > 0
+              ? `Grounded using ${sourceChunkIds.length} source chunk${sourceChunkIds.length === 1 ? "" : "s"}.`
+              : "No source chunks were returned."}
+          </p>
         </section>
       ) : null}
     </PageShell>

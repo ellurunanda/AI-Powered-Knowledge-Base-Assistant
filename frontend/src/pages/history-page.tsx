@@ -39,6 +39,9 @@ export function HistoryPage() {
       setTotalPages(conversationsResponse.data.pagination.totalPages);
       setDocuments(documentsResponse.data.data);
     } catch (loadError) {
+      setItems([]);
+      setDocuments([]);
+      setTotalPages(1);
       setError(getApiErrorMessage(loadError));
     } finally {
       setIsLoading(false);
