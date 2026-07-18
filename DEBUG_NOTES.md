@@ -101,8 +101,4 @@ Fix:
 6. check history page
 7. check search page
 
-## Interview note
 
-A strong debugging answer is:
-
-> I isolate failures by layer: configuration, transport, validation, persistence, and AI provider integration. That helps me avoid guessing and lets me prove whether the issue is in my code, the database, or an external provider like Gemini.
