@@ -172,20 +172,6 @@ The backend currently includes:
 - unsafe payload sanitization for request data
 - environment-based secrets
 
-## Interview talking points
-
-### Why chunk documents?
-To avoid sending entire files to Gemini, reduce token usage, and improve retrieval relevance.
-
-### Why keep conversations in a separate collection?
-It scales better than embedding an unbounded array inside each document.
-
-### Why use middleware heavily?
-To centralize cross-cutting concerns like auth, validation, sanitization, and error handling.
-
-### Why use a modular monolith instead of microservices?
-The application is small enough to move fast in one deployable codebase while still keeping clear module boundaries.
-
 ## Known limitation
 
 Gemini availability depends on:
