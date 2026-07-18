@@ -21,6 +21,7 @@ interface TokenPayload {
 
 function signToken(payload: TokenPayload): string {
   return jwt.sign(payload, env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: env.JWT_EXPIRES_IN_MINUTES * 60,
   });
 }

@@ -25,7 +25,10 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
   }
 
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
+
     if (typeof decoded === "string" || !decoded.sub || !decoded.email) {
       throw new AppError("Invalid authentication token payload", 401);
     }
@@ -50,4 +53,3 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
     next(error);
   }
 }
-

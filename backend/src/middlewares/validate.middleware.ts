@@ -16,6 +16,15 @@ export function validate(schema: ZodTypeAny): RequestHandler {
       return;
     }
 
+    const parsed = result.data as {
+      body: Request["body"];
+      params: Request["params"];
+      query: Request["query"];
+    };
+
+    req.body = parsed.body;
+    req.params = parsed.params;
+    req.query = parsed.query;
     next();
   };
 }
