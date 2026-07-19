@@ -24,7 +24,7 @@ const cookieMaxAgeMs = env.JWT_EXPIRES_IN_MINUTES * 60 * 1000;
 function setAuthCookie(res: Response, token: string): void {
   res.cookie(env.JWT_COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     secure: env.NODE_ENV === "production",
     maxAge: cookieMaxAgeMs,
   });
@@ -79,7 +79,7 @@ export const meController = asyncHandler(async (req: Request, res: Response) => 
 export const logoutController = asyncHandler(async (_req: Request, res: Response) => {
   res.clearCookie(env.JWT_COOKIE_NAME, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: env.NODE_ENV === "production" ? "none" : "lax",
     secure: env.NODE_ENV === "production",
   });
 
