@@ -34,3 +34,21 @@ export function PublicOnlyRoute({ children }: GuardProps) {
 
   return children;
 }
+
+export function AdminOnlyRoute({ children }: GuardProps) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingState label="Checking access..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}

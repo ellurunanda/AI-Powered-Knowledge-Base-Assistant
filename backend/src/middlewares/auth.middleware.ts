@@ -33,9 +33,12 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
       throw new AppError("Invalid authentication token payload", 401);
     }
 
+    const role = decoded.role === "admin" ? "admin" : "member";
+
     req.user = {
       id: decoded.sub,
       email: String(decoded.email),
+      role,
     };
 
     next();

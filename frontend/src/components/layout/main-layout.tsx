@@ -3,7 +3,7 @@ import { useToast } from "../../app/providers/use-toast";
 import { getApiErrorMessage } from "../../lib/api/error";
 import { useAuth } from "../../features/auth/use-auth";
 
-const navItems = [
+const baseNavItems = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/upload", label: "Upload" },
   { to: "/chat", label: "Chat" },
@@ -14,6 +14,7 @@ const navItems = [
 export function MainLayout() {
   const { user, logout } = useAuth();
   const { showToast } = useToast();
+  const navItems = user?.role === "admin" ? [...baseNavItems, { to: "/admin/users", label: "Admin" }] : baseNavItems;
 
   const handleLogout = async () => {
     try {
@@ -44,6 +45,11 @@ export function MainLayout() {
               </NavLink>
             ))}
             <span className="ml-2 text-sm text-slate-600">{user?.name}</span>
+            {user?.role ? (
+              <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                {user.role}
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={handleLogout}

@@ -2,6 +2,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: "member" | "admin";
+  isApproved: boolean;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "member" | "admin";
+  isApproved: boolean;
+  createdAt: string;
 }
 
 export interface DocumentItem {
@@ -68,6 +79,7 @@ export interface SearchDocumentItem {
   uploadDate: string;
   mimeType: string;
   sizeInBytes: number;
+  matchType?: "keyword" | "semantic";
 }
 
 export interface SearchConversationItem {

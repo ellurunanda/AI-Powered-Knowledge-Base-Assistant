@@ -5,6 +5,7 @@ export interface DocumentChunk {
   ownerId: Types.ObjectId;
   chunkIndex: number;
   content: string;
+  embedding?: number[];
   tokenCountEstimate: number;
   charStart: number;
   charEnd: number;
@@ -34,6 +35,11 @@ const documentChunkSchema = new Schema<DocumentChunk>(
       required: true,
       trim: true,
     },
+    embedding: {
+      type: [Number],
+      required: false,
+      default: undefined,
+    },
     tokenCountEstimate: {
       type: Number,
       required: true,
@@ -58,7 +64,7 @@ const documentChunkSchema = new Schema<DocumentChunk>(
 
 documentChunkSchema.index({ documentId: 1, chunkIndex: 1 }, { unique: true });
 documentChunkSchema.index({ ownerId: 1, documentId: 1 });
+documentChunkSchema.index({ ownerId: 1, documentId: 1, embedding: 1 });
 documentChunkSchema.index({ content: "text" });
 
 export const DocumentChunkModel = model<DocumentChunk>("DocumentChunk", documentChunkSchema);
-

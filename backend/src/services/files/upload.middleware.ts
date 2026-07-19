@@ -37,7 +37,7 @@ export const uploadSingleDocument = multer({
   },
   fileFilter: (_req, file, cb) => {
     if (!isSupportedFile(file)) {
-      cb(new AppError("Unsupported file type. Allowed: PDF, TXT, Markdown", 400));
+      cb(new AppError("Unsupported file type. Allowed: PDF, TXT, Markdown, PNG, JPG, JPEG, WEBP", 400));
       return;
     }
 
@@ -46,4 +46,3 @@ export const uploadSingleDocument = multer({
 }).single("file");
 
 export { uploadDirPath };
-

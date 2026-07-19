@@ -60,16 +60,32 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setUser(nextUser);
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
-    const response = await httpClient.post<{ success: boolean; data: { user: User } }>("/auth/register", {
-      name,
-      email,
-      password,
-    });
-    const nextUser = response.data.data.user;
-    bootstrappedUser = nextUser;
-    setUser(nextUser);
-  }, []);
+  const register = useCallback(
+    async (name: string, email: string, password: string, role: "member" | "admin") => {
+      const response = await httpClient.post<{
+        success: boolean;
+        data: { user: User; requiresApproval: boolean };
+      }>("/auth/register", {
+        name,
+        email,
+        password,
+        role,
+      });
+
+      const requiresApproval = response.data.data.requiresApproval;
+      if (requiresApproval) {
+        bootstrappedUser = null;
+        setUser(null);
+      } else {
+        const nextUser = response.data.data.user;
+        bootstrappedUser = nextUser;
+        setUser(nextUser);
+      }
+
+      return { requiresApproval };
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     await httpClient.post("/auth/logout");

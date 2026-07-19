@@ -1,22 +1,27 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 import { env } from "../../config/env";
 import { AppError } from "../../utils/app-error";
 import { UserModel } from "./auth.model";
 import type { LoginInput, RegisterInput } from "./auth.validation";
 
 interface AuthResult {
-  token: string;
+  token?: string;
+  requiresApproval: boolean;
   user: {
     id: string;
     name: string;
     email: string;
+    role: "member" | "admin";
+    isApproved: boolean;
   };
 }
 
 interface TokenPayload {
   sub: string;
   email: string;
+  role: "member" | "admin";
 }
 
 function signToken(payload: TokenPayload): string {
@@ -26,11 +31,19 @@ function signToken(payload: TokenPayload): string {
   });
 }
 
-function mapUser(user: { _id: { toString(): string }; name: string; email: string }): AuthResult["user"] {
+function mapUser(user: {
+  _id: { toString(): string };
+  name: string;
+  email: string;
+  role: "member" | "admin";
+  isApproved: boolean;
+}): AuthResult["user"] {
   return {
     id: user._id.toString(),
     name: user.name,
     email: user.email,
+    role: user.role,
+    isApproved: user.isApproved,
   };
 }
 
@@ -46,17 +59,29 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
     name: input.name,
     email: normalizedEmail,
     passwordHash,
+    role: input.role,
+    isApproved: input.role === "admin",
   });
 
-  const token = signToken({
-    sub: user._id.toString(),
-    email: user.email,
-  });
+  const requiresApproval = user.role === "member" && !user.isApproved;
+  const token = requiresApproval
+    ? undefined
+    : signToken({
+        sub: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      });
 
-  return {
-    token,
+  const result: AuthResult = {
+    requiresApproval,
     user: mapUser(user),
   };
+
+  if (token) {
+    result.token = token;
+  }
+
+  return result;
 }
 
 export async function loginUser(input: LoginInput): Promise<AuthResult> {
@@ -71,13 +96,23 @@ export async function loginUser(input: LoginInput): Promise<AuthResult> {
     throw new AppError("Invalid email or password", 401);
   }
 
+  if (user.role === "member" && !user.isApproved) {
+    throw new AppError(
+      "Your account is pending admin approval. Please wait until an admin approves your access.",
+      403,
+      "ACCOUNT_PENDING_APPROVAL",
+    );
+  }
+
   const token = signToken({
     sub: user._id.toString(),
     email: user.email,
+    role: user.role,
   });
 
   return {
     token,
+    requiresApproval: false,
     user: mapUser(user),
   };
 }
@@ -92,5 +127,80 @@ export async function getProfile(userId: string) {
     _id: user._id.toString(),
     name: user.name,
     email: user.email,
+    role: user.role,
+    isApproved: user.isApproved,
+  });
+}
+
+export async function listAllUsers() {
+  const users = await UserModel.find({})
+    .sort({ createdAt: -1 })
+    .select("_id name email role isApproved createdAt")
+    .lean<
+      Array<{
+        _id: { toString(): string };
+        name: string;
+        email: string;
+        role: "member" | "admin";
+        isApproved: boolean;
+        createdAt: Date;
+      }>
+    >();
+
+  return users.map((user) => ({
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isApproved: user.isApproved,
+    createdAt: user.createdAt,
+  }));
+}
+
+export async function updateUserRole(userId: string, role: "member" | "admin") {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
+  const user = await UserModel.findByIdAndUpdate(
+    new Types.ObjectId(userId),
+    { $set: { role } },
+    { new: true },
+  )
+    .select("_id name email role isApproved")
+    .lean<
+      { _id: { toString(): string }; name: string; email: string; role: "member" | "admin"; isApproved: boolean } | null
+    >();
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return mapUser(user);
+}
+
+export async function updateUserApproval(userId: string, isApproved: boolean) {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
+  const user = await UserModel.findById(new Types.ObjectId(userId));
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (user.role !== "member") {
+    throw new AppError("Approval flow applies to member accounts only", 400);
+  }
+
+  user.isApproved = isApproved;
+  await user.save();
+
+  return mapUser({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isApproved: user.isApproved,
   });
 }

@@ -4,6 +4,8 @@ export interface User {
   name: string;
   email: string;
   passwordHash: string;
+  role: "member" | "admin";
+  isApproved: boolean;
 }
 
 const userSchema = new Schema<User>(
@@ -25,6 +27,17 @@ const userSchema = new Schema<User>(
     passwordHash: {
       type: String,
       required: true,
+    },
+    role: {
+      type: String,
+      enum: ["member", "admin"],
+      default: "member",
+      index: true,
+    },
+    isApproved: {
+      type: Boolean,
+      default: true,
+      index: true,
     },
   },
   {

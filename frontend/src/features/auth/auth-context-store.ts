@@ -5,10 +5,14 @@ export interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    role: "member" | "admin",
+  ) => Promise<{ requiresApproval: boolean }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-

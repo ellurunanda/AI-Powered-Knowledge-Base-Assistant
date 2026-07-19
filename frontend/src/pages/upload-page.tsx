@@ -139,7 +139,7 @@ export function UploadPage() {
   };
 
   return (
-    <PageShell title="Upload" description="Upload PDF, TXT, and Markdown documents.">
+    <PageShell title="Upload" description="Upload PDF, TXT, Markdown, and image documents.">
       <form className="space-y-4 rounded-lg border border-slate-200 p-4" onSubmit={handleUpload}>
         <div className="space-y-1">
           <label htmlFor="title" className="text-sm font-medium text-slate-700">
@@ -161,11 +161,11 @@ export function UploadPage() {
             ref={fileInputRef}
             id="file"
             type="file"
-            accept=".pdf,.txt,.md,.markdown,text/plain,text/markdown,application/pdf"
+            accept=".pdf,.txt,.md,.markdown,.png,.jpg,.jpeg,.webp,text/plain,text/markdown,application/pdf,image/png,image/jpeg,image/webp"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
             className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
-          <p className="text-xs text-slate-500">Supported: PDF, TXT, Markdown</p>
+          <p className="text-xs text-slate-500">Supported: PDF, TXT, Markdown, PNG, JPG, JPEG, WEBP</p>
         </div>
         {uploadError ? <ErrorState message={uploadError} /> : null}
         {uploadMessage ? <p className="text-sm text-emerald-700">{uploadMessage}</p> : null}

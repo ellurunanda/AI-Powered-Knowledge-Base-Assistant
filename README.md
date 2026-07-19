@@ -6,10 +6,16 @@ AI Powered Knowledge Base Assistant is a full-stack SaaS-style application where
 
 Core capabilities:
 - user signup/login with JWT
+- role-based access foundation (`member` / `admin`)
+- signup includes role selection (`member` or `admin`)
+- admin panel to view users and update roles
+- member accounts require admin approval before first login
 - upload PDF, TXT, and Markdown files
+- OCR fallback for scanned PDFs and image files (PNG/JPG/JPEG/WEBP)
 - ask AI questions grounded in uploaded documents
+- streaming AI responses in chat UI
 - conversation history with pagination
-- document and conversation search
+- hybrid keyword + semantic document search
 - dashboard analytics
 
 ## Setup instructions
@@ -58,9 +64,16 @@ UPLOAD_DIR=uploads
 MAX_UPLOAD_SIZE_MB=10
 GEMINI_API_KEY=your_gemini_api_key
 GEMINI_MODEL=gemini-flash-latest
+GEMINI_EMBEDDING_MODEL=text-embedding-004
+GEMINI_OCR_MODEL=gemini-1.5-flash
 CHUNK_SIZE_CHARS=1200
 CHUNK_OVERLAP_CHARS=200
 MAX_CONTEXT_CHUNKS=6
+ENABLE_SEMANTIC_SEARCH=true
+SEMANTIC_SEARCH_MODE=local
+ATLAS_VECTOR_INDEX_NAME=document_chunk_vector_idx
+SEMANTIC_NUM_CANDIDATES=120
+SEMANTIC_FALLBACK_SCAN_LIMIT=500
 CORS_ORIGIN=http://localhost:3000
 TRUST_PROXY=0
 RATE_LIMIT_WINDOW_MS=900000
@@ -121,3 +134,28 @@ npm run dev -- --host 0.0.0.0 --port 3000
 - [DEBUG_NOTES.md](./DEBUG_NOTES.md)
 - [DATA_MODEL.md](./DATA_MODEL.md)
 - [RELEASE_ACCEPTANCE_CHECKLIST.md](./RELEASE_ACCEPTANCE_CHECKLIST.md)
+
+## Atlas vector index (optional for production semantic search)
+
+If you run `SEMANTIC_SEARCH_MODE=atlas_vector`, create this Atlas Vector Search index on `documentchunks`:
+
+```json
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 768,
+      "similarity": "cosine"
+    },
+    {
+      "type": "filter",
+      "path": "ownerId"
+    },
+    {
+      "type": "filter",
+      "path": "documentId"
+    }
+  ]
+}
+```

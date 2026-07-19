@@ -13,6 +13,7 @@ export function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"member" | "admin">("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,9 +22,14 @@ export function SignupPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      await register(name.trim(), email.trim(), password);
-      showToast("Account created successfully", "success");
-      navigate("/dashboard", { replace: true });
+      const result = await register(name.trim(), email.trim(), password, role);
+      if (result.requiresApproval) {
+        showToast("Signup successful. Wait for admin approval before login.", "info");
+        navigate("/login", { replace: true });
+      } else {
+        showToast("Account created successfully", "success");
+        navigate("/dashboard", { replace: true });
+      }
     } catch (submitError) {
       const message = getApiErrorMessage(submitError);
       setError(message);
@@ -62,6 +68,20 @@ export function SignupPage() {
               onChange={(event) => setEmail(event.target.value)}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
             />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="role" className="text-sm font-medium text-slate-700">
+              Role
+            </label>
+            <select
+              id="role"
+              value={role}
+              onChange={(event) => setRole(event.target.value as "member" | "admin")}
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
           <div className="space-y-1">
             <label htmlFor="password" className="text-sm font-medium text-slate-700">

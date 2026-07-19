@@ -82,6 +82,6 @@ const documentSchema = new Schema<Document>(
 );
 
 documentSchema.index({ ownerId: 1, uploadDate: -1 });
+documentSchema.index({ title: "text", originalFilename: "text" });
 
 export const DocumentModel = model<Document>("Document", documentSchema);
-

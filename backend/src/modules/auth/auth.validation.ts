@@ -11,6 +11,7 @@ export const registerSchema = z.object({
     name: z.string().trim().min(2).max(100),
     email,
     password,
+    role: z.enum(["member", "admin"]),
   }),
   params: z.object({}),
   query: z.object({}),
@@ -25,5 +26,27 @@ export const loginSchema = z.object({
   query: z.object({}),
 });
 
+export const updateUserRoleSchema = z.object({
+  body: z.object({
+    role: z.enum(["member", "admin"]),
+  }),
+  params: z.object({
+    userId: z.string().trim().min(1),
+  }),
+  query: z.object({}),
+});
+
+export const updateUserApprovalSchema = z.object({
+  body: z.object({
+    isApproved: z.boolean(),
+  }),
+  params: z.object({
+    userId: z.string().trim().min(1),
+  }),
+  query: z.object({}),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>["body"];
 export type LoginInput = z.infer<typeof loginSchema>["body"];
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
+export type UpdateUserApprovalInput = z.infer<typeof updateUserApprovalSchema>;

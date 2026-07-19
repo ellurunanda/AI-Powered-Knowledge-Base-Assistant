@@ -109,7 +109,14 @@ export function SearchPage() {
               <ul className="space-y-2">
                 {documents.map((doc) => (
                   <li key={doc.id} className="rounded-md border border-slate-200 p-3 text-sm">
-                    <p className="font-medium text-slate-900">{doc.title || doc.originalFilename}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium text-slate-900">{doc.title || doc.originalFilename}</p>
+                      {doc.matchType ? (
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                          {doc.matchType}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-xs text-slate-500">{doc.status}</p>
                   </li>
                 ))}

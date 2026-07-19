@@ -10,6 +10,13 @@ import { getApiErrorMessage } from "../lib/api/error";
 import { httpClient } from "../lib/api/http-client";
 import type { DocumentItem } from "../types/api";
 
+interface StreamPayload {
+  type: "token" | "done" | "error";
+  token?: string;
+  sourceChunkIds?: string[];
+  message?: string;
+}
+
 export function ChatPage() {
   const { showToast } = useToast();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -79,16 +86,77 @@ export function ChatPage() {
     setAnswer("");
     setSourceChunkIds([]);
     try {
-      const response = await httpClient.post<{
-        success: boolean;
-        data: { answer: string; documentId: string; sourceChunkIds: string[] };
-      }>("/chat/ask", {
-        question: question.trim(),
-        documentId: selectedDocumentId,
-      });
-      setAnswer(response.data.data.answer);
-      setSourceChunkIds(response.data.data.sourceChunkIds);
-      showToast("Answer generated", "success");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api"}/chat/ask-stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            question: question.trim(),
+            documentId: selectedDocumentId,
+          }),
+        },
+      );
+
+      if (!response.ok || !response.body) {
+        const fallbackResponse = await httpClient.post<{
+          success: boolean;
+          data: { answer: string; documentId: string; sourceChunkIds: string[] };
+        }>("/chat/ask", {
+          question: question.trim(),
+          documentId: selectedDocumentId,
+        });
+        setAnswer(fallbackResponse.data.data.answer);
+        setSourceChunkIds(fallbackResponse.data.data.sourceChunkIds);
+        showToast("Answer generated", "success");
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let eventBuffer = "";
+      let streamedAnswer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+
+        eventBuffer += decoder.decode(value, { stream: true });
+        const events = eventBuffer.split("\n\n");
+        eventBuffer = events.pop() ?? "";
+
+        for (const rawEvent of events) {
+          const dataLine = rawEvent
+            .split("\n")
+            .map((line) => line.trim())
+            .find((line) => line.startsWith("data:"));
+
+          if (!dataLine) {
+            continue;
+          }
+
+          const payloadJson = dataLine.slice("data:".length).trim();
+          if (!payloadJson) {
+            continue;
+          }
+
+          const payload = JSON.parse(payloadJson) as StreamPayload;
+          if (payload.type === "token" && payload.token) {
+            streamedAnswer += payload.token;
+            setAnswer(streamedAnswer);
+          } else if (payload.type === "done") {
+            setSourceChunkIds(payload.sourceChunkIds ?? []);
+            showToast("Answer generated", "success");
+          } else if (payload.type === "error") {
+            throw new Error(payload.message ?? "Unable to stream answer");
+          }
+        }
+      }
     } catch (error) {
       const message = getApiErrorMessage(error);
       setAskError(message);
