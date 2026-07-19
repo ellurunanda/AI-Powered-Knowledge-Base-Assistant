@@ -19,6 +19,16 @@ export interface DocumentItem {
   };
 }
 
+export interface DocumentPreview {
+  documentId: string;
+  title?: string;
+  originalFilename: string;
+  mimeType: string;
+  previewText: string;
+  isTruncated: boolean;
+  totalCharacters: number;
+}
+
 export interface ConversationItem {
   id: string;
   ownerId: string;

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
 import { LoadingState } from "../components/common/loading-state";
@@ -92,7 +94,10 @@ export function HistoryPage() {
                 {item.documentTitle ? ` • ${item.documentTitle}` : ""}
               </p>
               <p className="mt-2 text-sm font-semibold text-slate-900">Q: {item.question}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">A: {item.answer}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">A:</p>
+              <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-800 [&_code]:rounded [&_code]:bg-slate-200 [&_code]:px-1 [&_code]:py-0.5 [&_h1]:mt-3 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:leading-6 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:bg-slate-900 [&_pre]:p-3 [&_pre]:text-slate-100 [&_ul]:ml-5 [&_ul]:list-disc">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.answer}</ReactMarkdown>
+              </div>
             </article>
           ))}
           <div className="flex items-center justify-between">

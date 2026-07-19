@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useToast } from "../app/providers/use-toast";
 import { EmptyState } from "../components/common/empty-state";
 import { ErrorState } from "../components/common/error-state";
@@ -154,7 +156,9 @@ export function ChatPage() {
       {answer ? (
         <section className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-800">Answer</h3>
-          <p className="whitespace-pre-wrap text-sm text-slate-700">{answer}</p>
+          <div className="rounded-md bg-slate-50 p-3 text-sm text-slate-800 [&_code]:rounded [&_code]:bg-slate-200 [&_code]:px-1 [&_code]:py-0.5 [&_h1]:mt-3 [&_h1]:text-lg [&_h1]:font-semibold [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_ol]:ml-5 [&_ol]:list-decimal [&_p]:leading-6 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:bg-slate-900 [&_pre]:p-3 [&_pre]:text-slate-100 [&_ul]:ml-5 [&_ul]:list-disc">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+          </div>
           <p className="text-xs text-slate-500">
             {sourceChunkIds.length > 0
               ? `Grounded using ${sourceChunkIds.length} source chunk${sourceChunkIds.length === 1 ? "" : "s"}.`

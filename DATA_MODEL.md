@@ -161,6 +161,3 @@ Stores question/answer history with source tracking.
 - Vector DB/embeddings:
   - Pros: best semantic relevance
   - Cons: added cost and complexity
-
-**Recommendation:** Start with text index + chunk ranking, keep schema vector-ready for later upgrade.
-

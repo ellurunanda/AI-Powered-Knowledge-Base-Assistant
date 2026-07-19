@@ -3,7 +3,12 @@ import { asyncHandler } from "../../utils/async-handler";
 import { AppError } from "../../utils/app-error";
 import { requireUser } from "../../utils/request-user";
 import { sendSuccess } from "../../utils/success-response";
-import { createDocumentRecord, listDocumentsByOwner } from "./documents.service";
+import {
+  createDocumentRecord,
+  deleteDocumentById,
+  getDocumentPreviewById,
+  listDocumentsByOwner,
+} from "./documents.service";
 import { uploadDocumentBodySchema } from "./documents.validation";
 
 export const uploadDocumentController = asyncHandler(async (req: Request, res: Response) => {
@@ -47,5 +52,39 @@ export const listDocumentsController = asyncHandler(async (req: Request, res: Re
   sendSuccess({
     res,
     data: documents,
+  });
+});
+
+export const previewDocumentController = asyncHandler(async (req: Request, res: Response) => {
+  const user = requireUser(req);
+  const rawDocumentId = req.params.documentId;
+  const documentId = Array.isArray(rawDocumentId) ? rawDocumentId[0] : rawDocumentId;
+
+  if (!documentId) {
+    throw new AppError("Document id is required", 400);
+  }
+
+  const preview = await getDocumentPreviewById(user.id, documentId);
+  sendSuccess({
+    res,
+    data: preview,
+  });
+});
+
+export const deleteDocumentController = asyncHandler(async (req: Request, res: Response) => {
+  const user = requireUser(req);
+  const rawDocumentId = req.params.documentId;
+  const documentId = Array.isArray(rawDocumentId) ? rawDocumentId[0] : rawDocumentId;
+
+  if (!documentId) {
+    throw new AppError("Document id is required", 400);
+  }
+
+  const result = await deleteDocumentById(user.id, documentId);
+
+  sendSuccess({
+    res,
+    message: "Document deleted successfully",
+    data: result,
   });
 });
