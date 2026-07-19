@@ -22,17 +22,24 @@ You should run backend and frontend in separate terminals.
 
 ## Installation steps
 
-### 1) Install backend dependencies
+### 1) Clone the repository
 
 ```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\backend"
+git clone https://github.com/ellurunanda/AI-Powered-Knowledge-Base-Assistant.git
+cd AI-Powered-Knowledge-Base-Assistant
+```
+
+### 2) Install backend dependencies
+
+```powershell
+cd backend
 npm install
 ```
 
-### 2) Install frontend dependencies
+### 3) Install frontend dependencies
 
 ```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\frontend"
+cd ..\frontend
 npm install
 ```
 
@@ -66,14 +73,14 @@ AUTH_RATE_LIMIT_MAX_ATTEMPTS=10
 ### Backend (port 5000)
 
 ```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\backend"
+cd backend
 npm run dev
 ```
 
 ### Frontend (port 3000)
 
 ```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\frontend"
+cd frontend
 npm run dev -- --host 0.0.0.0 --port 3000
 ```
 
