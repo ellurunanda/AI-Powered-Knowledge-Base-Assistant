@@ -1,104 +1,93 @@
 # Debug Notes
 
-## Current known issues and resolutions
+This file documents real issues encountered during implementation and how they were resolved.
 
-### 1) Missing environment variables on backend start
+## Issue 1: Backend failed to start due to missing environment variables
 
-Symptom:
-- backend crashes on startup with env validation errors
+### Problem
+Backend crashed during startup with configuration validation errors.
 
-Cause:
-- `MONGODB_URI`, `JWT_SECRET`, or `GEMINI_API_KEY` missing in `backend\.env`
+### Root cause
+Required environment variables (`MONGODB_URI`, `JWT_SECRET`, `GEMINI_API_KEY`) were missing from `backend\.env`.
 
-Fix:
-- create `backend\.env` with all required values
+### Investigation
+- checked startup stack trace
+- traced error to environment schema validation in config loader
+- confirmed `.env` was missing required keys
 
-### 2) Duplicate Mongoose email index warning
+### Solution
+Created and populated `backend\.env` with required values. Startup succeeded after restart.
 
-Symptom:
-- warning about duplicate schema index on `email`
+---
 
-Cause:
-- index declared twice in the user schema
+## Issue 2: Dashboard and other GET APIs returned 500
 
-Fix:
-- keep a single unique index definition
+### Problem
+`/api/analytics/dashboard` and similar GET endpoints failed with server errors.
 
-### 3) GET routes returning 400 unexpectedly
+### Root cause
+Validation middleware attempted to reassign `req.query` directly, but in this Express runtime `req.query` is getter-only.
 
-Symptom:
-- analytics and conversations GET routes returned validation errors
+### Investigation
+- reproduced failures from dashboard page
+- inspected backend logs and error message
+- isolated failure to validation middleware after refactor
 
-Cause:
-- validation payload normalization needed explicit empty objects for GET body/params/query
+### Solution
+Changed middleware logic to mutate query object values in place instead of reassigning `req.query`.
 
-Fix:
-- normalize request payload before schema parsing
+---
 
-### 4) GET routes returning 500 with `req.query` error
+## Issue 3: Mongoose duplicate index warning on user email
 
-Symptom:
-- dashboard showed `Cannot set property query of #<IncomingMessage> which has only a getter`
+### Problem
+Backend emitted warning about duplicate schema index on `email`.
 
-Cause:
-- validation middleware tried to reassign `req.query`
+### Root cause
+Email index was declared in two places in the user schema.
 
-Fix:
-- mutate `req.query` in place instead of replacing the object reference
+### Investigation
+- inspected warning details from runtime logs
+- reviewed auth model index definitions
+- confirmed duplicate index declaration
 
-### 5) Gemini invalid API key
+### Solution
+Removed redundant index declaration and kept one unique index.
 
-Symptom:
-- Gemini returns 400 invalid key
+---
 
-Cause:
-- wrong or inactive API key
+## Issue 4: Gemini integration failures (invalid key / model not found / quota exceeded)
 
-Fix:
-- create a valid key in Google AI Studio and update `backend\.env`
+### Problem
+Chat endpoint sometimes returned provider errors: invalid API key, unsupported model, or quota exceeded.
 
-### 6) Gemini model not found
+### Root cause
+External provider configuration and quota state, not application business logic.
 
-Symptom:
-- Gemini returns 404 for a model name
+### Investigation
+- captured raw Gemini error responses
+- validated model availability via models endpoint
+- checked key/project mapping and quota response details
 
-Cause:
-- chosen model is deprecated or not available for the project
+### Solution
+- updated `.env` to use supported model alias
+- documented provider troubleshooting steps
+- improved frontend error messaging for clearer user feedback
 
-Fix:
-- switch to a currently supported alias such as `gemini-flash-latest`
+---
 
-### 7) Gemini quota exceeded
+## Issue 5: VS Code showed JSX errors while project still built
 
-Symptom:
-- Gemini returns 429 quota exceeded
+### Problem
+Editor reported many false TypeScript errors in `.tsx` files (for example `PageShell` treated like a type).
 
-Cause:
-- free tier or project quota is exhausted
+### Root cause
+`erasableSyntaxOnly` was enabled in frontend tsconfig, causing JSX parsing incompatibility in this setup.
 
-Fix:
-- wait for reset, enable billing, or use another project with available quota
+### Investigation
+- compared CLI build success vs editor diagnostics
+- extracted raw Problems panel entries
+- traced repeated syntax errors to tsconfig behavior
 
-## Safe debugging checklist
-
-1. confirm backend `.env` values
-2. confirm backend is running on port `5000`
-3. confirm frontend is running on port `3000`
-4. call `/api/health`
-5. verify login works
-6. verify upload works
-7. verify document listing works
-8. verify analytics works
-9. verify Gemini key, model, and quota status
-
-## Manual smoke-test order
-
-1. register user
-2. login user
-3. upload a small TXT file
-4. open dashboard
-5. ask a question in chat
-6. check history page
-7. check search page
-
-
+### Solution
+Removed `erasableSyntaxOnly` from frontend tsconfig files and reloaded editor/TS server.

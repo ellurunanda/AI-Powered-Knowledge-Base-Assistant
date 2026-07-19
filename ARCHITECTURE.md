@@ -1,145 +1,79 @@
 # Architecture
 
-## System overview
+## Project structure
 
-This application is a modular monolith with a React frontend and an Express backend.
-The design keeps the codebase simple to run locally while still using production-style separation of concerns.
+The project is organized as a monorepo:
 
-## System diagram
+- `frontend/` - React + Vite + Tailwind UI
+- `backend/` - Express API with modular domains
+- root docs - architecture, data model, AI usage, debugging notes, release checklist
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                           React Frontend                           │
-│ Pages: Login, Signup, Dashboard, Upload, Chat, History, Search     │
-│ Providers: Auth, Toast                                              │
-│ HTTP Client: Axios                                                  │
-└──────────────────────────────┬──────────────────────────────────────┘
-                               │
-                               │ HTTP + JWT cookie / bearer token
-                               ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                       Express Backend API                           │
-│                                                                     │
-│  Routes -> Middleware -> Controllers -> Services -> MongoDB/Gemini │
-│                                                                     │
-│  Cross-cutting layers:                                              │
-│  - auth middleware                                                  │
-│  - validation middleware                                            │
-│  - request sanitization                                             │
-│  - rate limiting                                                    │
-│  - helmet                                                           │
-│  - error handling                                                   │
-└───────────────────────┬──────────────────────────┬──────────────────┘
-                        │                          │
-                        ▼                          ▼
-             ┌───────────────────┐      ┌──────────────────────────┐
-             │ MongoDB           │      │ Gemini API               │
-             │ users             │      │ grounded answer          │
-             │ documents         │      │ generation               │
-             │ document_chunks   │      │                          │
-             │ conversations     │      │                          │
-             └───────────────────┘      └──────────────────────────┘
-```
+Backend modules are separated by domain (`auth`, `documents`, `chat`, `conversations`, `analytics`, `search`) with dedicated routes/controllers/services.
 
-## Frontend responsibilities
+## Database design
 
-The frontend is responsible for:
+MongoDB collections:
+- `users`
+- `documents`
+- `document_chunks`
+- `conversations`
 
-- rendering route-level pages
-- storing authenticated user state
-- sending API requests with credentials
-- handling loading, error, and empty states
-- presenting analytics, uploads, search, and chat results
+High-level relationships:
+- one user -> many documents
+- one document -> many chunks
+- one user -> many conversations
+- one conversation references source chunks used during retrieval
 
-## Backend responsibilities
+Design intent:
+- keep documents and conversation history scalable
+- support pagination and search
+- support grounded AI answers through chunk retrieval
 
-The backend is responsible for:
+## Authentication approach
 
-- authenticating users
-- validating request payloads
-- storing metadata and conversations
-- parsing uploaded files
-- chunking extracted text
-- retrieving relevant chunk context
-- calling Gemini with a prompt built from retrieved context
-- returning consistent success and error responses
+Authentication is JWT-based:
+- register/login issue signed JWT
+- token sent via HttpOnly cookie (and supported as Bearer token)
+- `authMiddleware` verifies token and attaches user identity to request
+- protected routes require valid authenticated user
+- token expiration enforced via config
 
-## Request flows
+## Major engineering decisions
 
-### 1) Authentication flow
+1. **Modular monolith over microservices**
+   - simpler local development and deployment
+   - still preserves clean module boundaries
 
-1. Frontend submits register or login form.
-2. Backend validates payload with Zod.
-3. Passwords are hashed and compared using bcrypt.
-4. JWT is signed and returned.
-5. Token is stored as an HttpOnly cookie.
-6. Protected frontend pages use `/api/auth/me` to bootstrap session state.
+2. **RAG-style retrieval using Mongo text search first**
+   - lower complexity and cost for MVP
+   - allows later upgrade to vector search without redesigning core models
 
-### 2) Upload flow
+3. **Middleware-first cross-cutting concerns**
+   - auth, validation, sanitization, error mapping, security headers, rate limiting
+   - improves consistency and reduces duplicated logic
 
-1. User uploads PDF, TXT, or Markdown document.
-2. Multer validates file size and file type.
-3. Backend stores document metadata.
-4. Physical file is saved to the uploads directory.
-5. Document remains available for later parsing and AI retrieval.
+4. **Chunk persistence strategy**
+   - parse/chunk once, reuse many times
+   - better latency and lower token cost compared to reparsing every request
 
-### 3) AI question answering flow
+5. **Explicit error contract**
+   - structured backend errors with codes
+   - frontend maps provider/system errors to readable user messages
 
-1. User selects a document and asks a question.
-2. Backend ensures the document belongs to the authenticated user.
-3. Backend checks whether chunks already exist.
-4. If chunks do not exist, text is extracted and chunked.
-5. Backend retrieves relevant chunks from MongoDB text search.
-6. Backend builds a compact prompt using only the selected chunk context.
-7. Gemini generates an answer.
-8. Backend saves the conversation entry with source chunk references.
-9. Frontend displays the answer and updates history.
+## How I would improve or scale this application
 
-### 4) Search flow
+Short-term improvements:
+- add richer API integration tests with ephemeral test database
+- add frontend component tests beyond utility tests
+- add refresh token flow and session revocation list
 
-1. Frontend sends a search query.
-2. Backend searches document metadata and conversation text.
-3. Matching results are returned in one response object.
-4. Frontend renders grouped search sections.
-
-### 5) Dashboard analytics flow
-
-1. Frontend requests dashboard analytics.
-2. Backend counts documents and conversations for the current user.
-3. Backend calculates recent uploads and averages.
-4. Frontend renders summary cards and recent activity.
-
-## Design decisions
-
-### Why use chunk-based retrieval?
-Chunking improves relevance and reduces token cost compared to sending entire documents.
-
-### Why use MongoDB text indexes first?
-They are fast to implement and good enough for an initial RAG-style product without vector infrastructure.
-
-### Why save conversation history?
-It supports auditability, search, analytics, and better product UX.
-
-### Why modular controllers and services?
-It keeps transport logic, business logic, and infrastructure concerns separated.
-
-## Security architecture
-
-The API uses:
-
-- `helmet` for headers
-- `cors` allow-listing
-- rate limiting
-- request sanitization
-- JWT verification with explicit algorithm checking
-- structured error responses
-
-## Scalability path
-
-If this product grows, the natural next steps are:
-
+Mid-term improvements:
 - move file storage to cloud object storage
-- add vector embeddings for semantic retrieval
-- add background jobs for document ingestion
-- add caching for analytics and repeated searches
-- add refresh tokens and session revocation
+- add background job processing for parsing/chunking
+- add caching for hot analytics/search endpoints
+
+Long-term improvements:
+- semantic retrieval with embeddings + vector index
+- team workspaces and RBAC
+- observability stack (structured logs, traces, SLO dashboards)
+- multi-region deployment with failover strategy

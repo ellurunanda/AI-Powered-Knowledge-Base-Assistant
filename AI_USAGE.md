@@ -1,85 +1,75 @@
-# AI Usage Guide
+# AI Usage
 
-## Current AI workflow
+This document is intentionally honest about where AI helped, where it was wrong, and what was manually corrected.
 
-This project uses Gemini to answer questions against uploaded user documents.
-The backend does not send the entire document whenever possible.
-Instead, it retrieves a limited set of relevant chunks and builds a compact prompt.
+## Which AI tools I used
 
-## AI pipeline
+I used:
+- GitHub Copilot Chat / Copilot CLI assistant during development
+- Gemini API in the application runtime for document question answering
 
-1. user uploads a document
-2. backend extracts text from the file
-3. backend chunks the text
-4. chunks are stored in MongoDB
-5. user asks a question
-6. backend retrieves relevant chunks
-7. backend builds a grounded prompt
-8. Gemini returns the answer
-9. backend stores the conversation
+## How I used AI during development
 
-## Why this is a RAG-style design
+I used AI as a coding partner, not as an autopilot. The workflow was:
+1. draft module structure and route/service flow
+2. generate an initial implementation skeleton
+3. manually review generated code
+4. run typecheck/build/test/smoke checks
+5. patch issues and refactor for readability
 
-Even though the current version uses MongoDB text search instead of embeddings, the structure already follows retrieval-augmented generation principles:
+I mainly used AI to accelerate repetitive tasks (boilerplate, DTO mapping, repetitive error handling) and to speed up iteration.
 
-- retrieve relevant context
-- augment the prompt with retrieved context
-- generate a grounded answer
+## Example prompts I used
 
-## Prompt strategy
+Examples of development prompts I used:
+- "Implement auth module with register/login/me using JWT and bcrypt"
+- "Add upload API with Multer validation for PDF/TXT/MD"
+- "Add global error handling for Zod, JWT, Multer, and Mongo errors"
+- "Write frontend dashboard page with loading/error/empty states"
+- "Fix API validation error for GET query parsing"
 
-The backend prompt instructs Gemini to:
+## What code was AI-generated
 
-- use only provided context
-- say what is missing if context is insufficient
-- keep the answer concise and factual
+AI-assisted generation was used for:
+- initial controller/service scaffolding
+- route wiring patterns
+- frontend page skeletons
+- documentation first drafts
+- some test file starting templates
 
-This reduces hallucination risk compared with asking the model without grounding.
+## What I modified manually
 
-## Token optimization choices
+I manually adjusted and finalized:
+- request validation behavior for GET routes
+- unsafe payload sanitization behavior
+- chat retrieval query logic and fallback behavior
+- frontend state handling for stale data/reset cases
+- model and error handling around Gemini API failures
+- release verification and documentation quality
 
-The system reduces token usage by:
+## Where AI gave incorrect suggestions
 
-- chunking documents
-- limiting context chunk count
-- avoiding full-document prompts
-- storing parsed chunks once instead of reparsing every request
+1. **Gemini model assumptions**
+   - AI suggested model names that were not available for the current project/account.
+   - I replaced with currently supported model aliases and validated against live API responses.
 
-## Important environment variables
+2. **Validation middleware mutation**
+   - One generated refactor reassigned `req.query`, which is getter-only in this runtime.
+   - This caused runtime 500s on GET endpoints.
+   - I fixed by mutating query object values instead of reassigning.
 
-```env
-GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-flash-latest
-CHUNK_SIZE_CHARS=1200
-CHUNK_OVERLAP_CHARS=200
-MAX_CONTEXT_CHUNKS=6
-```
+3. **Frontend/editor diagnostics confusion**
+   - Build passed, but editor showed JSX parse errors due to TS config setting (`erasableSyntaxOnly`).
+   - I corrected tsconfig to remove that setting for this project.
 
-## Recommended model strategy
+## How I verified correctness
 
-If Gemini model availability changes, use a current alias first:
+I did not trust generated code blindly. I verified by:
+- backend: `npm run typecheck`, `npm run build`, `npm test`
+- frontend: `npm run typecheck`, `npm run build`, `npm run lint`, `npm test`
+- runtime smoke tests covering auth, upload, analytics, search, chat, history
+- manual validation of edge cases (invalid input, no token, bad payloads, provider failures)
 
-```env
-GEMINI_MODEL=gemini-flash-latest
-```
+## Final note
 
-This reduces failures caused by retired fixed model names.
-
-## Common Gemini failures
-
-### Invalid API key
-Cause: key is wrong or copied from the wrong project.
-
-### Model not found
-Cause: model is deprecated, restricted, or not supported for the current API version.
-
-### Quota exceeded
-Cause: free-tier quota or billing quota is exhausted.
-
-## Production improvement ideas
-
-- add model fallback order
-- add retry policy for transient 429 errors
-- add semantic retrieval with embeddings
-- log latency and token usage more deeply
-- add answer citations in the UI
+AI sped up implementation, but correctness came from manual review, test execution, and repeated debugging.

@@ -1,98 +1,44 @@
 # AI Powered Knowledge Base Assistant
 
-A production-style full stack SaaS application where users can upload knowledge documents and ask AI questions grounded in their own data.
+## Project overview
 
-## Project goals
+AI Powered Knowledge Base Assistant is a full-stack SaaS-style application where users can upload documents and ask AI questions based on their own content. The goal was to build this like a real production project: modular structure, clear boundaries, secure defaults, and interview-ready decisions.
 
-This project was built step by step like a real product team would build it:
-
-- architecture first
-- modular backend design
-- reusable frontend structure
-- validation before business logic
-- secure defaults
-- interview-friendly code organization
-
-## Tech stack
-
-### Frontend
-- React
-- Vite
-- TypeScript
-- Tailwind CSS
-- React Router
-- Axios
-
-### Backend
-- Node.js
-- Express
-- TypeScript
-- Mongoose
-- JWT authentication
-- Multer
-- Zod validation
-
-### Database and AI
-- MongoDB
-- Gemini API
-
-## Core features
-
-- user registration and login
-- JWT-based protected routes
+Core capabilities:
+- user signup/login with JWT
 - upload PDF, TXT, and Markdown files
-- parse and chunk uploaded documents
-- ask AI questions against uploaded knowledge
-- save conversation history
-- search documents and conversations
+- ask AI questions grounded in uploaded documents
+- conversation history with pagination
+- document and conversation search
 - dashboard analytics
-- global error handling and security middleware
 
-## Monorepo layout
+## Setup instructions
 
-```text
-AI-Powered Knowledge Base Assistant/
-├── backend/
-├── frontend/
-├── ARCHITECTURE.md
-├── DATA_MODEL.md
-├── AI_USAGE.md
-└── DEBUG_NOTES.md
-```
+This repository is a monorepo with two apps:
+- `frontend` (React + Vite)
+- `backend` (Node.js + Express + MongoDB)
 
-## High-level architecture
+You should run backend and frontend in separate terminals.
 
-Frontend sends authenticated HTTP requests to the backend API.
-The backend validates the request, applies security middleware, queries MongoDB, and when needed sends grounded context to Gemini.
-The final answer is returned to the frontend and the conversation is stored for later search and analytics.
+## Installation steps
 
-See:
-- [ARCHITECTURE.md](./ARCHITECTURE.md)
-- [DATA_MODEL.md](./DATA_MODEL.md)
-- [AI_USAGE.md](./AI_USAGE.md)
-- [DEBUG_NOTES.md](./DEBUG_NOTES.md)
-
-## Local development setup
-
-### 1) Install dependencies
-
-Backend:
+### 1) Install backend dependencies
 
 ```powershell
 cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\backend"
 npm install
 ```
 
-Frontend:
+### 2) Install frontend dependencies
 
 ```powershell
 cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\frontend"
 npm install
 ```
 
-### 2) Configure environment
+## Environment variables
 
-Create `backend\.env` with values like:
+Create `backend\.env`:
 
 ```env
 NODE_ENV=development
@@ -115,69 +61,56 @@ RATE_LIMIT_MAX_REQUESTS=200
 AUTH_RATE_LIMIT_MAX_ATTEMPTS=10
 ```
 
-## Running the app
+## Running locally
 
-Frontend on port `3000`:
-
-```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\frontend"
-npm run dev -- --host 0.0.0.0 --port 3000
-```
-
-Backend on port `5000`:
+### Backend (port 5000)
 
 ```powershell
 cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\backend"
 npm run dev
 ```
 
-## Validation commands
-
-Backend:
-
-```powershell
-cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\backend"
-npm run typecheck
-npm run build
-npm test
-```
-
-Frontend:
+### Frontend (port 3000)
 
 ```powershell
 cd "C:\Users\crazy\OneDrive\Desktop\AIAgent\AI-Powered Knowledge Base Assistant\frontend"
-npm run typecheck
-npm run build
-npm run lint
+npm run dev -- --host 0.0.0.0 --port 3000
 ```
 
-## API areas
+## Design decisions
 
-- `/api/auth` - register, login, logout, profile
-- `/api/documents` - upload and list documents
-- `/api/chat` - grounded question answering
-- `/api/conversations` - paginated history
-- `/api/analytics` - dashboard metrics
-- `/api/search` - document and conversation search
+1. **Modular monolith backend**
+   - I kept auth, documents, chat, analytics, conversations, and search in separate modules.
+   - This gives clean ownership without microservice overhead.
 
-## Security summary
+2. **Chunk-based retrieval before AI generation**
+   - I store extracted text in chunks and retrieve relevant chunks for prompts.
+   - This keeps prompts smaller and improves answer grounding.
 
-The backend currently includes:
+3. **JWT auth + middleware layering**
+   - Auth, validation, sanitization, and error handling are centralized middleware concerns.
+   - Controllers stay focused on business behavior.
 
-- `helmet` secure headers
-- JWT expiration and verification
-- strict CORS allow-listing
-- global and auth-specific rate limiting
-- Zod request validation
-- unsafe payload sanitization for request data
-- environment-based secrets
+4. **MongoDB text search first**
+   - I intentionally started with text indexing instead of vector infra to keep the MVP simple and affordable.
 
-## Known limitation
+5. **Security-first defaults**
+   - Helmet, CORS allow-listing, rate limiting, environment validation, and input sanitization are enabled by default.
 
-Gemini availability depends on:
+## Future improvements
 
-- valid API key
-- supported model name
-- quota/billing availability in the Google project
+- add semantic search with embeddings/vector index
+- add background workers for document parsing/chunking at scale
+- add refresh tokens + session revocation strategy
+- add role-based access control for team workspaces
+- add e2e UI tests and API integration tests with seeded test database
+- move uploads to cloud storage (S3/Azure Blob/GCS)
+- add answer citations in UI with clickable source snippets
 
-See [AI_USAGE.md](./AI_USAGE.md) and [DEBUG_NOTES.md](./DEBUG_NOTES.md) for troubleshooting.
+## Additional documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [AI_USAGE.md](./AI_USAGE.md)
+- [DEBUG_NOTES.md](./DEBUG_NOTES.md)
+- [DATA_MODEL.md](./DATA_MODEL.md)
+- [RELEASE_ACCEPTANCE_CHECKLIST.md](./RELEASE_ACCEPTANCE_CHECKLIST.md)
